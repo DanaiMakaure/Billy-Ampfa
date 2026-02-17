@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>For You 🤍</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Poppins',sans-serif;
+}
+
+body{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    background:#1E3A8A; /* nicer dark blue */
+    overflow-x:hidden;
+    color:#f5f1ed;
+    padding-top:40px;
+    position:relative;
+}
+
+.card{
+    width:800px;
+    padding:40px 60px;
+    border-radius:30px;
+    background:rgba(245,241,235,0.08);
+    backdrop-filter:blur(20px);
+    box-shadow:0 20px 60px rgba(0,0,0,0.5);
+    text-align:center;
+    position:relative;
+    z-index:2;
+}
+
+h1{
+    font-family:'Playfair Display', serif;
+    font-size:32px;
+    margin-bottom:25px;
+    color:#f5f1ed;
+}
+
+p{
+    line-height:1.7;
+    font-size:17px;
+    color:#ddd5cf;
+    margin-bottom:25px;
+}
+
+input{
+    padding:12px;
+    border-radius:25px;
+    border:none;
+    outline:none;
+    text-align:center;
+    width:220px;
+    margin-top:15px;
+    background:#f5f1ed;
+}
+
+button{
+    padding:12px 28px;
+    border-radius:30px;
+    border:none;
+    margin:10px;
+    cursor:pointer;
+    background:#4a90e2; /* blue buttons */
+    color:white;
+    transition:0.3s;
+    font-size:15px;
+}
+
+button:hover{
+    background:#357ABD;
+    transform:scale(1.05);
+}
+
+.hidden{
+    display:none;
+}
+
+/* PUZZLE */
+.puzzle{
+    display:grid;
+    grid-template-columns:repeat(2,140px);
+    grid-template-rows:repeat(2,140px);
+    gap:4px;
+    justify-content:center;
+    margin-top:30px;
+}
+
+.tile{
+    width:140px;
+    height:140px;
+    background-size:280px 280px;
+    border-radius:15px;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.tile:hover{
+    transform:scale(1.05);
+}
+
+.puzzle-glow{
+    box-shadow:0 0 60px rgba(255,255,255,0.8);
+    transition:0.5s;
+}
+
+.soft-error{
+    color:#c97b84;
+    margin-top:15px;
+}
+
+.overlay{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.6);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:1000;
+}
+
+.popup{
+    background:white;
+    padding:35px;
+    border-radius:25px;
+    text-align:center;
+    width:350px;
+    animation:pop 0.4s ease;
+}
+
+.popup img{
+    width:200px;
+    border-radius:20px;
+    margin-bottom:15px;
+}
+
+@keyframes pop{
+    from{transform:scale(0.7); opacity:0;}
+    to{transform:scale(1); opacity:1;}
+}
+
+.story-chapter{
+    background:rgba(245,241,235,0.05);
+    margin:30px auto;
+    padding:25px;
+    border-radius:20px;
+    font-size:16px;
+    line-height:1.7;
+    text-align:left;
+    display:none;
+}
+
+/* STORY VIDEO BACKGROUND */
+#storyVideo{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    z-index:1;
+    display:none;
+    filter: brightness(0.4);
+}
+
+/* SPOTIFY EMBED */
+.spotify{
+    margin-top:20px;
+    border-radius:16px;
+    overflow:hidden;
+}
+</style>
+</head>
+
+<body>
+
+<!-- Background Music -->
+<audio id="bgMusic" loop>
+<source src="Iran.mp3" type="audio/mpeg"> <!-- Rod Wave Iran -->
+</audio>
+
+<!-- Story Video Background -->
+<video id="storyVideo" autoplay muted loop>
+    <source src="C:/Users/Admin/OneDrive - Sol Plaatje University/Desktop/Billy/vid.mp4" type="video/mp4">
+</video>
+
+<div class="card">
+
+<!-- ACCESS LOCK -->
+<div id="lock">
+<h1>Before You Enter 🤍</h1>
+<p>Type the day we had our first meetup:</p>
+<input type="text" id="dateInput" placeholder="DD/MM/YYYY">
+<br>
+<button onclick="unlock()">Enter</button>
+<div id="lockError" class="soft-error hidden">That’s not our day… try again.</div>
+</div>
+
+<!-- INTRO -->
+<div id="stage1" class="hidden fade-in">
+<h1>For You 🤍</h1>
+<p>
+Maybe I can't be your Valentine 💔.  
+Maybe I was never meant to be 😢.  
+But the lover girl in me wanted to create something soft and intentional just for you 🤍.
+</p>
+<button onclick="startPuzzle()">Choose Me 🤍</button>
+<button onclick="showStory()">Read Our Story 📖</button>
+<button onclick="reject()">Choose The Other Side 💔</button>
+<div id="rejectMsg" class="soft-error hidden">
+That option doesn’t exist here.
+</div>
+</div>
+
+<!-- PUZZLE -->
+<div id="stage2" class="hidden fade-in">
+<h1>Put Us Back Together 🤍</h1>
+<p>It’s easy… just like choosing me should be 🥰.</p>
+<div class="puzzle" id="puzzle"></div>
+<button onclick="backToIntroFromPuzzle()">Go Back 🤍</button>
+</div>
+
+<!-- GIFT -->
+<div id="stage3" class="hidden fade-in">
+<h1>You Did It 🤍</h1>
+<p id="giftText">You put us back together...</p>
+</div>
+
+<!-- STORYBOOK -->
+<div id="storyStage" class="hidden fade-in">
+<h1>Our Story 📖</h1>
+<div id="storyContent"></div>
+
+<!-- Spotify Player for “Iran” -->
+<div class="spotify">
+    <iframe style="border-radius:16px"
+        src="https://open.spotify.com/embed/track/5tQIUGDIpGmZerBVAosnRo"
+        width="100%" height="80"
+        frameBorder="0"
+        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture">
+    </iframe>
+</div>
+
+<p style="font-size:14px; color:#4a90e2; margin-top:15px;">Press Enter to read the next chapter ➡️</p>
+<button onclick="backToIntro()">Back 🤍</button>
+</div>
+
+</div>
+
+<div id="overlay" class="hidden"></div>
+
+<script>
+let image="IMG_9059.JPEG";
+let tiles=[];
+let emptyIndex=3;
+
+const storyContentArr=[
+` The first time I saw you was at a competition. Honestly, I just thought you looked good 😏. I told my teammates, "There’s only one man here," and we all laughed. I wasn’t really paying attention to you,was too focused on my own stuff.`,
+` Then came that “caught off guard” moment in the war room. I felt so dumb… even more so when you saw me shaking! I hate last-minute chaos; I like to be on top of my game.`,
+` By the final presentation, I thought, "Okay, let me just show what I know." After the awards ceremony, I was just sipping my drink, not expecting to bump into you… and then there you were. And I thought, "Okay…uhmm he’s cute, definitely handsome and not in my😳." I may have kinda forced your contacts out of you… don’t really remember exactly how that went.`,
+` I really wanted to chat with you after that, but you were so nonchalant 😒. I decided to let it slide… then, magically, you actually started talking! Nice. Definitely "whoever keeps me up at night," because you’re totally nocturnal .`,
+` Fast forward to when we met properly. I was nervous, blubbering, thinking "what is this guy thinking?" or "will he ghost me?" 😅. But we kept talking anyway. Not to forget… you have this talent for evading serious conversations which l dont exactly fancy welll till l kill you myself 😏.`,
+` I wanted to see you before school started, worried you might forget me. I asked nicely, but you refused  because you wanted to host which was reasonable but all l wanted to see wassss YOUUUUU 😤. So I decided to surprise you instead which l really hope you didnt take offece in but well some of our best memories (at least according to me) are from that day 😇.`,
+` I dont know when l will send this so l couldn't/cant/ wont be your Valentine but the lover girl in me couldn’t just sit around 😏. I got you a little something (well l am editing this now because l might have stumbled on something l thought you would like in the shops apart from the gift). Now the big question: should I deliver it myself , or courier it ?`
+];
+
+let currentChapter=0;
+
+function unlock(){
+    let input=document.getElementById("dateInput").value.trim();
+    if(input==="30/12/2025"){
+        document.getElementById("lock").classList.add("hidden");
+        document.getElementById("stage1").classList.remove("hidden");
+    }else{
+        document.getElementById("lockError").classList.remove("hidden");
+    }
+}
+
+function reject(){
+    document.getElementById("rejectMsg").classList.remove("hidden");
+}
+
+function startPuzzle(){
+    document.getElementById("stage1").classList.add("hidden");
+    document.getElementById("stage2").classList.remove("hidden");
+    document.getElementById("bgMusic").play();
+    createPuzzle();
+}
+
+// PUZZLE FUNCTIONS
+function createPuzzle(){
+    const puzzle=document.getElementById("puzzle");
+    puzzle.innerHTML="";
+    tiles=[0,1,2,3];
+    tiles.sort(()=>Math.random()-0.5);
+
+    tiles.forEach((num,i)=>{
+        const tile=document.createElement("div");
+        tile.classList.add("tile");
+        if(num!==3){
+            let x=(num%2)*140;
+            let y=Math.floor(num/2)*140;
+            tile.style.backgroundImage=`url(${image})`;
+            tile.style.backgroundPosition=`-${x}px -${y}px`;
+            tile.onclick=()=>moveTile(i);
+        }else{
+            tile.style.background="transparent";
+            emptyIndex=i;
+        }
+        puzzle.appendChild(tile);
+    });
+}
+
+function moveTile(index){
+    if([emptyIndex-1,emptyIndex+1,emptyIndex-2,emptyIndex+2].includes(index)){
+        [tiles[index],tiles[emptyIndex]]=[tiles[emptyIndex],tiles[index]];
+        createPuzzle();
+        checkWin();
+    }
+}
+
+function checkWin(){
+    if(tiles.every((v,i)=>v===i)){
+        document.getElementById("puzzle").classList.add("puzzle-glow");
+        setTimeout(()=>{
+            document.getElementById("stage2").classList.add("hidden");
+            document.getElementById("stage3").classList.remove("hidden");
+
+            setTimeout(()=>{
+                document.getElementById("giftText").innerHTML=
+                "Your gift has been with me this whole time... 🎁<br><br>Do you want me to bring it myself 🤍 or courier it 📦?";
+                addGiftChoices();
+            },1800);
+
+        },1200);
+    }
+}
+
+function addGiftChoices(){
+    const giftText=document.getElementById("giftText");
+    giftText.innerHTML+=`<br><br>
+    <button onclick="comeWith()">Come With It 🤍</button>
+    <button onclick="courier()">Courier It 📦</button>`;
+}
+
+function showPopup(content){
+    const overlay=document.getElementById("overlay");
+    overlay.classList.remove("hidden");
+    overlay.innerHTML=`<div class="popup">${content}<button onclick="closePopup()">Close 🤍</button></div>`;
+}
+
+function closePopup(){
+    document.getElementById("overlay").classList.add("hidden");
+}
+
+function comeWith(){
+    showPopup(`<p style="color:#4a90e2; font-weight:600;">
+    Then I’ll bring it myself… 🤍<br><br>
+    And maybe steal one soft hug before I leave.
+    </p>`);
+}
+
+function courier(){
+    showPopup(`<img src="IMG_9059.JPEG">
+    <p style="color:#4a90e2; font-weight:600;">
+    So you don’t want to see this face in person? 🥺<br><br>
+    Fine… I’ll courier it.<br>
+    But just know my heart is inside that box.
+    </p>`);
+}
+
+// PUZZLE GO BACK
+function backToIntroFromPuzzle(){
+    document.getElementById("stage2").classList.add("hidden");
+    document.getElementById("stage1").classList.remove("hidden");
+    document.getElementById("bgMusic").pause();
+}
+
+// STORY FUNCTIONS (ENTER TO NEXT CHAPTER)
+function showStory(){
+    document.getElementById("stage1").classList.add("hidden");
+    document.getElementById("storyStage").classList.remove("hidden");
+    document.getElementById("storyVideo").style.display="block";
+    const storyDiv=document.getElementById("storyContent");
+    storyDiv.innerHTML="";
+    currentChapter=0;
+    showChapter(currentChapter);
+
+    document.addEventListener("keydown", handleEnter);
+}
+
+function handleEnter(e){
+    if(e.key==="Enter"){
+        currentChapter++;
+        if(currentChapter<storyContentArr.length){
+            showChapter(currentChapter);
+        } else {
+            document.removeEventListener("keydown", handleEnter);
+            const storyDiv=document.getElementById("storyContent");
+            storyDiv.innerHTML+=`<p style="margin-top:20px; font-weight:600;">💌 Now the big question: should I deliver it myself 🤍 or courier it 📦?</p>
+            <button onclick="comeWith()">Come With It 🤍</button>
+            <button onclick="courier()">Courier It 📦</button>`;
+        }
+    }
+}
+
+function showChapter(index){
+    const storyDiv=document.getElementById("storyContent");
+    const p=document.createElement("p");
+    p.classList.add("story-chapter");
+    p.textContent=storyContentArr[index];
+    storyDiv.appendChild(p);
+    setTimeout(()=>p.style.display="block",100);
+}
+
+function backToIntro(){
+    document.getElementById("storyStage").classList.add("hidden");
+    document.getElementById("stage1").classList.remove("hidden");
+    document.getElementById("storyVideo").style.display="none";
+    document.removeEventListener("keydown", handleEnter);
+}
+</script>
+</body>
+</html>
